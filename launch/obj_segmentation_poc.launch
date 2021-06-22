@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="rviz_display" default="true"/>
+
+    <node pkg="obj_segmentation_poc" type="delta_object_detection" name="delta_object_detection" output="screen">
+        
+     </node>
+    
+    <group if="$(arg rviz_display)">
+        <node name="rviz" pkg="rviz" type="rviz" args="-d $(find obj_segmentation_poc)/config/rviz_st_config.rviz" required="true"/>/>
+    </group>
+</launch>
