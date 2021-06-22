@@ -1,4 +1,4 @@
-## ros_object_segmentation_poc
+## ROS Object Segmentation from 3D Point Cloud
 
 ## How to run
 1. Add the content of this repo in ~/<catkin_ws>/src/object_segmentation_poc
