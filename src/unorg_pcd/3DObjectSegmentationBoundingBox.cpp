@@ -21,10 +21,33 @@ void ObjectSegmentation::pointcloudInfoCb(const sensor_msgs::PointCloud2& scene_
     std::cout<<"Number of points from camera: "<<cam1_scene_cloud_ptr_->points.size()<<std::endl;
     pointcloud_done_cam1_ = true;
 
-    applyBoxFilter();
-    
-    // applyRegionGrowingSegmentation();
+    // Process Input Point cloud
+    processPointCloud();
+
 }
+
+void ObjectSegmentation::processPointCloud() {
+
+    // Start the timer
+    double start = pcl::getTime();
+
+    // Read points from the specified Bounding box.
+    applyBoxFilter();
+
+    // Statistical Outlier Removal
+    applyStatisticalOutlierRemovalFilter();
+
+    // objSeg.box_filtered_cloud_ptr = objSeg.cam1_scene_cloud_ptr_;
+    applyPlaneSegmentation();
+
+    // Region Growing Segentation
+    applyRegionGrowingSegmentation();
+
+    // Calculate duration
+    double end = pcl::getTime();
+    std::cout << "Duration time/frame: " << double(end - start) << " ms" << std::endl;    
+}
+ 
 
 void ObjectSegmentation::applyBoxFilter()
 {    
@@ -39,8 +62,6 @@ void ObjectSegmentation::applyBoxFilter()
     box_filter.setMax(Eigen::Vector4f(maxX, maxY, maxZ, 1.0));
     box_filter.filter(*box_filtered_cloud_ptr);
     std::cout<<"The box-filtered point cloud has: "<<box_filtered_cloud_ptr->points.size()<<std::endl;
-
-    applyStatisticalOutlierRemovalFilter();
 }
 
 void ObjectSegmentation::applyStatisticalOutlierRemovalFilter(){
@@ -50,8 +71,6 @@ void ObjectSegmentation::applyStatisticalOutlierRemovalFilter(){
     sor.setMeanK (50);
     sor.setStddevMulThresh (5);
     sor.filter (*outlier_removal_output_cloud_ptr);
-    
-    applyPlaneSegmentation();
 }
 
 void ObjectSegmentation::applyPlaneSegmentation()
@@ -96,9 +115,6 @@ void ObjectSegmentation::applyPlaneSegmentation()
     extract.filter(*cam1_scene_cloud_ptr_filtered_);
     std::cout << "PointCloud after removing planar component: "
                 << cam1_scene_cloud_ptr_filtered_->size() << " data points." << std::endl;
-
-    applyRegionGrowingSegmentation();
-
 }
 
 void ObjectSegmentation::applyRegionGrowingSegmentation(){  // Region Growing RGB object detection
@@ -126,14 +142,14 @@ void ObjectSegmentation::applyRegionGrowingSegmentation(){  // Region Growing RG
 
     std::cout << "Color CLoud extracted" << std::endl;
 
-    publishMeshToRviz(cam1_scene_cloud_ptr_clusters_colored, pcd_cloud_pub_, frame_id_);
+    publishRGBCloudToRviz(cam1_scene_cloud_ptr_clusters_colored, pcd_cloud_pub_, frame_id_);
 
     std::cout << "Publish to Rviz" << std::endl;
 
     // visualiseProcessed3DImage();
 }
 
-void ObjectSegmentation::publishMeshToRviz(pcl::PointCloud<pcl::PointXYZRGB>::Ptr obj_detection_cloud, ros::Publisher& pub, std::string frame_id)
+void ObjectSegmentation::publishRGBCloudToRviz(pcl::PointCloud<pcl::PointXYZRGB>::Ptr obj_detection_cloud, ros::Publisher& pub, std::string frame_id)
     {
         sensor_msgs::PointCloud2 obj_detection_cloud_msg;
         pcl::toROSMsg(*obj_detection_cloud, obj_detection_cloud_msg);
@@ -179,10 +195,7 @@ void ObjectSegmentation::visualiseProcessed3DImage(){
 
 int main(int argc, char** argv)
 {
-    // Start the timer
-    double start = pcl::getTime();
-
-    ros::init(argc, argv, "/ros-pointcloud-obj-segmentation-poc");
+    ros::init(argc, argv, "/obj_segmentation_poc");
     ObjectSegmentation objSeg;
     ros::NodeHandle pnh("~");
     
@@ -190,10 +203,6 @@ int main(int argc, char** argv)
     while(ros::ok()){
         ros::spin();
     } 
-    
-    // Calculate duration
-    double end = pcl::getTime();
-    std::cout << "Duration: " << double(end - start) << " ms" << std::endl;
     
     return 0;
 }

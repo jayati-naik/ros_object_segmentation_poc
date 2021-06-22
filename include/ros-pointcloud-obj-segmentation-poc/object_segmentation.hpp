@@ -61,20 +61,23 @@ public:
     // Load Input PCD
     void loadInputPCD();
 
+    // Process the point cloud
+    void processPointCloud();
+
     // Apply Box Filter
     void applyBoxFilter();
 
     // Remove parallel planes
     void applyPlaneSegmentation();
 
-    // Apply Region Growing CLustering
-    void applyRegionGrowingSegmentation();
-
     // Remove Stastical outliers
     void applyStatisticalOutlierRemovalFilter();
 
+    // Apply Region Growing CLustering
+    void applyRegionGrowingSegmentation();
+
     // Display processed pcd on rviz
-    void publishMeshToRviz(pcl::PointCloud<pcl::PointXYZRGB>::Ptr obj_detection_cloud, ros::Publisher& pub, std::string frame_id);
+    void publishRGBCloudToRviz(pcl::PointCloud<pcl::PointXYZRGB>::Ptr obj_detection_cloud, ros::Publisher& pub, std::string frame_id);
 
     // Visualise Point CLoud
     void visualiseProcessed3DImage();
